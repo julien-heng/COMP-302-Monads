@@ -10,16 +10,40 @@ let (>>=) m f =
   let (y, s') = f x in
   (y, s @ s');;
 
-let log (m: 'a monad) (message: string) = (m >>= (fun x -> (x, [message])));;
+let log (m: 'a monad) (messages: string list) = (m >>= (fun x -> (x, messages)));;
 
-let rec binary_search g x =
-  let rec binary_search' fc g' =
+let dfs (g: graph) (x: int) =
+  let rec dfs' fc g' =
     match g' with
+    (*base case: Empty leave found, backtrack using fc*)
     | Empty -> fc ("Empty")
+    (*recursive case: Node found*)
     | Node (l, v, r) -> 
       let status = "Visiting " ^ (string_of_int v) in
+      (* if the Node is found*)
       if v = x then (g, ["Found " ^ (string_of_int v)])
+      (* the Node has not been found yet*)
       else 
-        (log (log (return l) status) ("Will visit Left subtree")) >>= binary_search' 
-            (fun s -> (log (log (log (log (return r) s)("Go back to " ^ string_of_int v)) status) "Will visit Right subtree") >>= binary_search' fc)
-        in return g >>= binary_search' (fun (s) -> log (log (return g) s) "Not Found :/");;
+        (*Recursive call on left child, with fc being the recursive call on the right child*)
+        (log (return l) [status; "Will visit Left subtree"]) >>= dfs' 
+            (fun s -> (log (return r) [s; "Go back to " ^ string_of_int v ; status; "Will visit Right subtree"]) >>= dfs' fc)
+  in 
+  (*call inner function*)
+  return g >>= dfs' (fun (s) -> (log (return g) [s; "Not Found :/"]));;
+
+
+let dfs_1 (g: graph) (x: int) =
+  let rec dfs' fc g' =
+    match g' with
+    (*base case: Empty leave found, backtrack using fc*)
+    | Empty -> fc ()
+    (*recursive case: Node found*)
+    | Node (l, v, r) -> 
+      if v = x then true
+      (* the Node has not been found yet*)
+      else 
+        (*Recursive call on left child, with fc being the recursive call on the right child*)
+        (dfs' (fun () -> dfs' fc r)) l
+  in 
+  (*call inner function*)
+  dfs' (fun () -> false) g;;
