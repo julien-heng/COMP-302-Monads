@@ -1,119 +1,64 @@
+(* Define the arithmetic operations as a recursive type *)
 type operation =
+  | Float of float
+  | Plus
+  | Minus
+  | Mult
+  | Div
 
- | PLUS of operation list
+(* Define the monadic structure for logging *)
+let ( >>= ) (m : float * string) (f : float -> float * string) : float * string =
+  let (x, log1) = m in
+  let (y, log2) = f x in
+  (y, log1 ^ log2)
 
- | MINUS of operation list
+let return (x : float) : float * string =
+  (x, "")
 
- | MULT of operation list
-
- | DIV of operation list
-
- | FLOAT of int
-
-let ( >>= ) (m : int * string) (f : int -> int * string) : int * string =
-
- let (x, s1) = m in
-
- let (y, s2) = f x in
-
- (y, s1 ^ s2)
-
-let return (x : int) : int * string =
-
- (x, "")
-
+(* Math operations *)
 let add x y =
-
- let result = x + y in
-
- (result, Printf.sprintf "Added %d and %d to get %d\n" x y result)
+  let result = x +. y in
+  (result, Printf.sprintf "Added %.2f and %.2f to get %.2f\n" x y result)
 
 let subtract x y =
-
- let result = x - y in
-
- (result, Printf.sprintf "Subtracted %d from %d to get %d\n" y x result)
+  let result = y -. x in
+  (result, Printf.sprintf "Subtracted %.2f from %.2f to get %.2f\n" x y result)
 
 let multiply x y =
+  let result = x *. y in
+  (result, Printf.sprintf "Multiplied %.2f and %.2f to get %.2f\n" x y result)
 
- let result = x * y in
-
- (result, Printf.sprintf "Multiplied %d and %d to get %d\n" x y result)
 let divide x y =
+  if y = 0.0 then
+    failwith "Division by zero"
+  else
+    let result = y /. x in
+    (result, Printf.sprintf "Divided %.2f by %.2f to get %.2f\n" y x result)
 
- if y = 0 then
+(* Function to compute an expression *)
+let rec compute_expression expr =
+  match expr with
+  | [] -> failwith "Invalid expression"
+  | [Float x] -> return x  (* Only one element, return it *)
+  | Float x1 :: Float x2 :: Plus :: rest ->
+      let sum = add x1 x2 in
+      sum >>= fun s -> compute_expression (Float s :: rest)
+  | Float x1 :: Float x2 :: Minus :: rest ->
+      let diff = subtract x1 x2 in
+      diff >>= fun d -> compute_expression (Float d :: rest)
+  | Float x1 :: Float x2 :: Mult :: rest ->
+      let prod = multiply x1 x2 in
+      prod >>= fun p -> compute_expression (Float p :: rest)
+  | Float x1 :: Float x2 :: Div :: rest ->
+      let quot = divide x1 x2 in
+      quot >>= fun q -> compute_expression (Float q :: rest)
+  | _ -> failwith "Invalid expression"
 
-   failwith "Division by zero"
+(* Function to calculate a list of operations *)
+let calculate (input : operation list) =
+  compute_expression input;;
 
- else
+let my_expression = [Float 4.0; Float 5.0; Mult; Float 7.0; Plus];;
 
-   let result = x / y in
-
-   (result, Printf.sprintf "Divided %d by %d to get %d\n" x y result)
-
-let rec calculate (expr: operation): int * string =
-
- match expr with
-
- | FLOAT x -> return x
-
- | PLUS ops ->
-
-     List.fold_left (fun acc op ->
-
-       acc >>= fun a ->
-
-       calculate op >>= fun b ->
-
-       add a b
-
-     ) (return 0) ops
-
- | MINUS ops ->
-
-     List.fold_left (fun acc op ->
-
-       acc >>= fun a ->
-
-       calculate op >>= fun b ->
-
-       subtract a b
-
-     ) (return 0) ops
-
- | MULT ops ->
-
-     List.fold_left (fun acc op ->
-
-       acc >>= fun a ->
-
-       calculate op >>= fun b ->
-
-       multiply a b
-
-     ) (return 1) ops
-
- | DIV ops ->
-
-     List.fold_left (fun acc op ->
-
-       acc >>= fun a ->
-
-       calculate op >>= fun b ->
-
-       divide a b
-
-     ) (return 1) ops
-
-let compute_expression expression =
-
- calculate expression
-
-
-let () =
-
- let expression = PLUS [MULT [FLOAT 4; FLOAT 5]; FLOAT 7] in
-
- let (result, log) = compute_expression expression in
-
- Printf.printf "Result: %d\nLog:\n%s" result log ;;
+let (result, log) = calculate my_expression;;
+Printf.printf "Result: %.2f\nLog:\n%s" result log;;
