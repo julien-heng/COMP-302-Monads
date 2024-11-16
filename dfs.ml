@@ -29,7 +29,7 @@ let dfs (g: graph) (x: int) =
             (fun s -> (log (return r) [s; "Go back to " ^ string_of_int v ; status; "Will visit Right subtree"]) >>= dfs' fc)
   in 
   (*call inner function*)
-  return g >>= dfs' (fun (s) -> (log (return g) [s; "Not Found :/"]));;
+  return g >>= dfs' (fun (s) -> (log (return g) [s; "Not Found!"]));;
 
 
 let dfs_1 (g: graph) (x: int) =
