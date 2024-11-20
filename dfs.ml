@@ -82,3 +82,24 @@ let dfs_1 (g: graph) (x: int) =
   in 
   (*call inner function*)
   dfs' (fun () -> false) g;;
+
+  let dfs_monad (x: int) (g: graph) =
+    let rec dfs' fc g' =
+      match g' with
+      (*base case: Empty leave found, backtrack using fc*)
+      | Empty -> fc ("Empty")
+      (*recursive case: Node found*)
+      | Node (l, v, r) -> 
+        let status = "Visiting " ^ (string_of_int v) in
+        (* if the Node is found*)
+        if v = x then (log (return g) ["Found " ^ (string_of_int v)])
+        (* the Node has not been found yet*)
+        else 
+          (*Recursive call on left child, with fc being the recursive call on the right child*)
+          (log (return l) [status; "Will visit Left subtree"]) >>= dfs' 
+              (fun s -> (log (return r) [s; "Go back to " ^ string_of_int v ; status; "Will visit Right subtree"]) >>= dfs' fc)
+    in 
+    (*call inner function*)
+    return g >>= dfs' (fun (s) -> (log (return g) [s; "Not Found!"]));;
+  
+(return g_1) >>= dfs_monad 110;;
