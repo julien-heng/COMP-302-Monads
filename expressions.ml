@@ -60,4 +60,4 @@ let rec eval (expr: operation) =
   eval op2 >>= fun y ->
   divide x y
 
-let expression = MINUS(PLUS (MULT (FLOAT 4., FLOAT 5.), FLOAT 7.), MULT(FLOAT 8., FLOAT 2.))
+let expression = DIV(MINUS(PLUS (MULT (FLOAT 4., FLOAT 5.), FLOAT 7.), MULT(FLOAT 8., FLOAT 2.)), MINUS (DIV (MINUS(FLOAT 2., FLOAT 4.), FLOAT 0.), FLOAT 9.))

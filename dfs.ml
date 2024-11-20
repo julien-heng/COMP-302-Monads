@@ -2,6 +2,35 @@ type graph = Empty | Node of graph * int * graph;;
 exception NotFound;;
 
 let g = Node ( Node (Node(Empty, 8, Empty), 1, Node(Node(Empty, 5, Node (Empty, 10, Empty)), 9, Empty)), 2, Node (Node(Empty, 6, Empty), 3, Empty));;
+let g_1 = Node(
+    Node(
+        Node(
+            Node(Empty, 3, Empty), 
+          2, 
+            Node(Empty, 4, Empty)), 
+      1, 
+        Node(
+            Node(Empty, 6, Empty), 
+          5, 
+            Node(Empty, 7, Empty))),
+  0, 
+    Node(
+        Node(
+              Node(Empty, 10, Empty), 
+            9, 
+              Node(Empty, 11, Empty)), 
+      8, 
+        Node(
+              Node(Empty, 13, Empty), 
+            12, 
+              Node(Empty, 14, Empty))));;
+(*
+0
+12
+3456
+789(10)
+
+*)
 
 type 'a monad = 'a * string list;;
 let return x = (x, []);;
@@ -9,6 +38,12 @@ let (>>=) m f =
   let (x, s) = m in
   let (y, s') = f x in
   (y, s @ s');;
+
+module type Monad = sig
+  type 'a monad
+  val return : 'a -> 'a monad
+  val (>>=) : 'a monad -> ('a -> 'b monad) -> 'b monad
+end;;
 
 let log (m: 'a monad) (messages: string list) = (m >>= (fun x -> (x, messages)));;
 
